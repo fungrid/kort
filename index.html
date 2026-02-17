@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kort - Card Game Prototyping</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-user-select: none; user-select: none; }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #1a5c2a;
+      color: #fff;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    h1 { font-size: 1.4rem; }
+
+    button {
+      padding: 8px 20px;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.95rem;
+      cursor: pointer;
+      background: #fff;
+      color: #1a5c2a;
+      font-weight: 600;
+      transition: background 0.15s;
+    }
+
+    button:hover { background: #e0e0e0; }
+
+    #card-container {
+      display: grid;
+      grid-template-columns: repeat(13, 80px);
+      gap: 10px;
+    }
+
+    .card {
+      width: 80px;
+      height: 112px;
+      background: #fff;
+      border-radius: 6px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 5px 7px;
+      font-family: "Georgia", serif;
+      font-weight: bold;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      transition: transform 0.15s;
+      position: relative;
+    }
+
+    .card:hover { transform: translateY(-4px); }
+
+    .card.red { color: #cc0000; }
+    .card.black { color: #111; }
+
+    .card .corner {
+      display: flex;
+      flex-direction: column;
+      line-height: 1;
+    }
+
+    .card .corner .rank { font-size: 1rem; }
+    .card .corner .suit { font-size: 0.85rem; }
+
+    .card .bottom {
+      align-self: flex-end;
+      transform: rotate(180deg);
+    }
+
+    .card .center {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 1.8rem;
+    }
+
+    .card.facedown {
+      background: #2255aa;
+      background-image:
+        repeating-linear-gradient(
+          45deg,
+          transparent,
+          transparent 4px,
+          rgba(255,255,255,0.08) 4px,
+          rgba(255,255,255,0.08) 8px
+        );
+      color: transparent;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Kort</h1>
+    <button id="shuffle-btn">Shuffle</button>
+    <button id="order-btn">Order</button>
+    <button id="facedown-btn">Face down</button>
+    <button id="faceup-btn">Face up</button>
+  </header>
+  <div id="card-container"></div>
+
+  <script>
+    const SUITS = [
+      { symbol: "\u2660", name: "spades",   color: "black" },
+      { symbol: "\u2665", name: "hearts",   color: "red"   },
+      { symbol: "\u2666", name: "diamonds", color: "red"   },
+      { symbol: "\u2663", name: "clubs",    color: "black" },
+    ];
+
+    const RANKS = ["A","2","3","4","5","6","7","8","9","10","J","Q","K"];
+
+    function createDeck() {
+      const deck = [];
+      for (const suit of SUITS) {
+        for (const rank of RANKS) {
+          deck.push({ rank, suit, facedown: false });
+        }
+      }
+      return deck;
+    }
+
+    function shuffle(deck) {
+      const a = [...deck];
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    function renderCard(card) {
+      const el = document.createElement("div");
+      el.className = `card ${card.suit.color}${card.facedown ? " facedown" : ""}`;
+      el.innerHTML = `
+        <div class="corner top">
+          <span class="rank">${card.rank}</span>
+          <span class="suit">${card.suit.symbol}</span>
+        </div>
+        <div class="center">${card.suit.symbol}</div>
+        <div class="corner bottom">
+          <span class="rank">${card.rank}</span>
+          <span class="suit">${card.suit.symbol}</span>
+        </div>
+      `;
+      el.addEventListener("click", () => {
+        card.facedown = !card.facedown;
+        renderDeck(deck);
+      });
+      return el;
+    }
+
+    function renderDeck(deck) {
+      const container = document.getElementById("card-container");
+      container.innerHTML = "";
+      for (const card of deck) {
+        container.appendChild(renderCard(card));
+      }
+    }
+
+    let deck = createDeck();
+    renderDeck(deck);
+
+    document.getElementById("shuffle-btn").addEventListener("click", () => {
+      deck = shuffle(deck);
+      renderDeck(deck);
+    });
+
+    document.getElementById("order-btn").addEventListener("click", () => {
+      deck = createDeck();
+      renderDeck(deck);
+    });
+
+    document.getElementById("facedown-btn").addEventListener("click", () => {
+      deck.forEach(c => c.facedown = true);
+      renderDeck(deck);
+    });
+
+    document.getElementById("faceup-btn").addEventListener("click", () => {
+      deck.forEach(c => c.facedown = false);
+      renderDeck(deck);
+    });
+  </script>
+</body>
+</html>
