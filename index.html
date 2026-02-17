@@ -112,6 +112,27 @@
       gap: 12px;
     }
 
+    .die-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .hold-btn {
+      padding: 4px 12px;
+      font-size: 0.8rem;
+    }
+
+    .hold-btn.held {
+      background: #f0c040;
+      color: #111;
+    }
+
+    .hold-btn.held:hover {
+      background: #d9ad30;
+    }
+
     .die {
       width: 60px;
       height: 60px;
@@ -227,7 +248,10 @@
       6: [[1,1],[1,3],[2,1],[2,3],[3,1],[3,3]]
     };
 
-    function renderDie(value) {
+    function renderDie(value, index) {
+      const wrapper = document.createElement("div");
+      wrapper.className = "die-wrapper";
+
       const die = document.createElement("div");
       die.className = "die";
       for (const [row, col] of DOT_POSITIONS[value]) {
@@ -237,27 +261,37 @@
         dot.style.gridColumn = col;
         die.appendChild(dot);
       }
-      return die;
+
+      const holdBtn = document.createElement("button");
+      holdBtn.className = "hold-btn" + (diceHeld[index] ? " held" : "");
+      holdBtn.textContent = "Hold";
+      holdBtn.addEventListener("click", () => {
+        diceHeld[index] = !diceHeld[index];
+        renderDice();
+      });
+
+      wrapper.appendChild(die);
+      wrapper.appendChild(holdBtn);
+      return wrapper;
     }
 
     function renderDice() {
       const container = document.getElementById("dice-container");
       container.innerHTML = "";
-      for (const value of diceValues) {
-        container.appendChild(renderDie(value));
-      }
+      diceValues.forEach((value, i) => container.appendChild(renderDie(value, i)));
     }
 
     function rollDice() {
-      diceValues = diceValues.map(() => Math.floor(Math.random() * 6) + 1);
+      diceValues = diceValues.map((v, i) => diceHeld[i] ? v : Math.floor(Math.random() * 6) + 1);
       renderDice();
-      document.querySelectorAll(".die").forEach(die => {
+      document.querySelectorAll(".die-wrapper:not(:has(.hold-btn.held)) .die").forEach(die => {
         die.classList.add("rolling");
         die.addEventListener("animationend", () => die.classList.remove("rolling"), { once: true });
       });
     }
 
     let diceValues = [1, 2, 3, 4, 5];
+    let diceHeld = [false, false, false, false, false];
     renderDice();
 
     document.getElementById("roll-btn").addEventListener("click", rollDice);
